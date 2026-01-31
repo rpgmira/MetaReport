@@ -50,7 +50,8 @@ jobs:
           }
           Write-Host "✅ Code coverage meets threshold (>= 35%)"
         } else {
-          Write-Warning "No coverage file found, skipping threshold check"
+          Write-Error "No coverage file found - coverage collection may have failed"
+          exit 1
         }
 
     - name: Publish

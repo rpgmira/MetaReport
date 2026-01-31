@@ -29,9 +29,9 @@ public class ReportFormatterTests
                 FreeMargin = 9500.00m,
                 Leverage = 100
             },
-            GeneratedAt = new DateTime(2026, 1, 30, 15, 0, 0, DateTimeKind.Utc),
-            PeriodStart = new DateTime(2026, 1, 29, 15, 0, 0, DateTimeKind.Utc),
-            PeriodEnd = new DateTime(2026, 1, 30, 15, 0, 0, DateTimeKind.Utc),
+            GeneratedAt = new DateTime(2024, 6, 15, 15, 0, 0, DateTimeKind.Utc),
+            PeriodStart = new DateTime(2024, 6, 14, 15, 0, 0, DateTimeKind.Utc),
+            PeriodEnd = new DateTime(2024, 6, 15, 15, 0, 0, DateTimeKind.Utc),
             RecentDeals = new List<Deal>
             {
                 new()
@@ -41,7 +41,7 @@ public class ReportFormatterTests
                     Type = "DEAL_TYPE_BUY",
                     Profit = 50.00m,
                     Volume = 0.1m,
-                    Time = new DateTime(2026, 1, 30, 10, 30, 0, DateTimeKind.Utc)
+                    Time = new DateTime(2024, 6, 15, 10, 30, 0, DateTimeKind.Utc)
                 },
                 new()
                 {
@@ -50,7 +50,7 @@ public class ReportFormatterTests
                     Type = "DEAL_TYPE_SELL",
                     Profit = -20.00m,
                     Volume = 0.2m,
-                    Time = new DateTime(2026, 1, 30, 14, 45, 0, DateTimeKind.Utc)
+                    Time = new DateTime(2024, 6, 15, 14, 45, 0, DateTimeKind.Utc)
                 }
             }
         };
@@ -59,10 +59,8 @@ public class ReportFormatterTests
     [Theory]
     [InlineData("UTC", "UTC")]
     [InlineData("SA Pacific Standard Time", "COT")]
-    [InlineData("Eastern Standard Time", "EST")]
-    [InlineData("Pacific Standard Time", "PST")]
-    [InlineData("Central Standard Time", "CST")]
-    public void GetTimeZoneAbbreviation_ShouldReturnCorrectAbbreviation(string timeZoneId, string expectedAbbreviation)
+    [InlineData("Tokyo Standard Time", "JST")]
+    public void GetTimeZoneAbbreviation_ForNonDstTimezones_ShouldReturnCorrectAbbreviation(string timeZoneId, string expectedAbbreviation)
     {
         // Arrange
         var formatter = CreateFormatter(timeZoneId);
@@ -74,12 +72,32 @@ public class ReportFormatterTests
         abbreviation.Should().Be(expectedAbbreviation);
     }
 
+    [Theory]
+    [InlineData("Eastern Standard Time")]
+    [InlineData("Pacific Standard Time")]
+    [InlineData("Central Standard Time")]
+    [InlineData("Mountain Standard Time")]
+    [InlineData("GMT Standard Time")]
+    [InlineData("Central European Standard Time")]
+    public void GetTimeZoneAbbreviation_ForDstTimezones_ShouldReturnValidAbbreviation(string timeZoneId)
+    {
+        // Arrange
+        var formatter = CreateFormatter(timeZoneId);
+
+        // Act
+        var abbreviation = formatter.GetTimeZoneAbbreviation();
+
+        // Assert - abbreviation should be 3-4 characters
+        abbreviation.Should().NotBeNullOrEmpty();
+        abbreviation.Length.Should().BeInRange(3, 4);
+    }
+
     [Fact]
     public void ToLocalTime_ShouldConvertUtcToLocalTime()
     {
         // Arrange
         var formatter = CreateFormatter("SA Pacific Standard Time"); // UTC-5
-        var utcTime = new DateTime(2026, 1, 30, 20, 0, 0, DateTimeKind.Utc);
+        var utcTime = new DateTime(2024, 6, 15, 20, 0, 0, DateTimeKind.Utc);
 
         // Act
         var localTime = formatter.ToLocalTime(utcTime);

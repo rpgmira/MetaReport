@@ -101,6 +101,6 @@ public class Deal
     /// Indicates if this is a trading deal (buy/sell) vs balance/credit operation.
     /// </summary>
     [JsonIgnore]
-    public bool IsTradeDeal => Type.Contains("BUY", StringComparison.OrdinalIgnoreCase) ||
-                                Type.Contains("SELL", StringComparison.OrdinalIgnoreCase);
+    public bool IsTradeDeal => Type?.Contains("BUY", StringComparison.OrdinalIgnoreCase) == true ||
+                                Type?.Contains("SELL", StringComparison.OrdinalIgnoreCase) == true;
 }

@@ -217,8 +217,9 @@ MetaReport/
 │   ├── IMetaApiService.cs         # MetaAPI interface
 │   ├── MetaApiService.cs          # MetaAPI implementation
 │   ├── IEmailService.cs           # Email interface
-│   ├── AzureEmailService.cs       # Azure Communication Services implementation
-│   └── SendGridEmailService.cs    # SendGrid implementation (legacy)
+│   ├── IReportFormatter.cs        # Report formatting interface
+│   ├── ReportFormatter.cs         # Report formatting with timezone support
+│   └── AzureEmailService.cs       # Azure Communication Services implementation
 ├── Program.cs                     # DI and startup config
 ├── host.json                      # Azure Functions host config
 ├── local.settings.template.json   # Settings template (safe to commit)

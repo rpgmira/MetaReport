@@ -40,17 +40,21 @@ public class ReportFormatter : IReportFormatter
     /// <inheritdoc />
     public string GetTimeZoneAbbreviation()
     {
+        // Determine whether the configured timezone is currently observing daylight saving time
+        var localNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _timeZone);
+        var isDaylightSavingTime = _timeZone.IsDaylightSavingTime(localNow);
+
         // Map common timezone IDs to their abbreviations
         return _timeZone.Id switch
         {
-            "SA Pacific Standard Time" => "COT",  // Colombia Time
-            "Eastern Standard Time" => "EST",
-            "Pacific Standard Time" => "PST",
-            "Central Standard Time" => "CST",
-            "Mountain Standard Time" => "MST",
-            "GMT Standard Time" => "GMT",
-            "Central European Standard Time" => "CET",
-            "Tokyo Standard Time" => "JST",
+            "SA Pacific Standard Time" => "COT",  // Colombia Time (no DST)
+            "Eastern Standard Time" => isDaylightSavingTime ? "EDT" : "EST",
+            "Pacific Standard Time" => isDaylightSavingTime ? "PDT" : "PST",
+            "Central Standard Time" => isDaylightSavingTime ? "CDT" : "CST",
+            "Mountain Standard Time" => isDaylightSavingTime ? "MDT" : "MST",
+            "GMT Standard Time" => isDaylightSavingTime ? "BST" : "GMT",  // UK observes BST in summer
+            "Central European Standard Time" => isDaylightSavingTime ? "CEST" : "CET",
+            "Tokyo Standard Time" => "JST",  // Japan doesn't observe DST
             "UTC" => "UTC",
             _ => _timeZone.StandardName.Length <= 5 ? _timeZone.StandardName : _timeZone.Id
         };

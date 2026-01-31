@@ -75,6 +75,20 @@ public class DealTests
     }
 
     [Fact]
+    public void IsTradeDeal_WithNullType_ShouldReturnFalse()
+    {
+        // Arrange - use reflection to set Type to null (edge case from deserialization)
+        var deal = new Deal();
+        typeof(Deal).GetProperty("Type")!.SetValue(deal, null);
+
+        // Act
+        var isTradeDeal = deal.IsTradeDeal;
+
+        // Assert - should not throw and should return false
+        isTradeDeal.Should().BeFalse();
+    }
+
+    [Fact]
     public void Id_DefaultsToEmptyString()
     {
         // Arrange & Act
