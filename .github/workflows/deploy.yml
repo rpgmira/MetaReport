@@ -1,7 +1,10 @@
-name: Deploy to Azure Functions
+name: Build, Test and Deploy
 
 on:
   push:
+    branches:
+      - master
+  pull_request:
     branches:
       - master
   workflow_dispatch:  # Allow manual trigger
@@ -12,8 +15,8 @@ env:
   DOTNET_VERSION: '8.0.x'
 
 jobs:
-  build-and-deploy:
-    runs-on: windows-latest  # Use Windows for Azure Functions Windows Consumption plan
+  build-and-test:
+    runs-on: windows-latest
     
     steps:
     - name: Checkout repository
@@ -25,15 +28,37 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore dependencies
-      run: dotnet restore MetaReport.csproj
+      run: dotnet restore
 
     - name: Build
-      run: dotnet build MetaReport.csproj --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests with coverage
+      run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+    - name: Check code coverage threshold
+      shell: pwsh
+      run: |
+        $coverageFile = Get-ChildItem -Path ./coverage -Filter "coverage.cobertura.xml" -Recurse | Select-Object -First 1
+        if ($coverageFile) {
+          [xml]$coverage = Get-Content $coverageFile.FullName
+          $lineRate = [double]$coverage.coverage.'line-rate' * 100
+          Write-Host "Code coverage: $([math]::Round($lineRate, 2))%"
+          if ($lineRate -lt 35) {
+            Write-Error "Code coverage ($([math]::Round($lineRate, 2))%) is below threshold (35%)"
+            exit 1
+          }
+          Write-Host "✅ Code coverage meets threshold (>= 35%)"
+        } else {
+          Write-Warning "No coverage file found, skipping threshold check"
+        }
 
     - name: Publish
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: dotnet publish MetaReport.csproj --configuration Release --output ./publish
 
     - name: Deploy to Azure Functions
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
