@@ -71,7 +71,7 @@ public class AccountInfo
     /// Account login number.
     /// </summary>
     [JsonPropertyName("login")]
-    public string Login { get; set; } = string.Empty;
+    public long Login { get; set; }
 
     /// <summary>
     /// Platform type (mt4 or mt5).

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'your-function-app-name'  # Set this to your function app name in Azure
+  AZURE_FUNCTIONAPP_NAME: 'func-metareport'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   DOTNET_VERSION: '8.0.x'
 
