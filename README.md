@@ -107,7 +107,7 @@ curl "http://localhost:7071/api/report"
 | `Email__ToAddresses` | Recipient emails (comma-separated for multiple) | ✅ | — |
 | `Email__ToName` | Recipient display name | ❌ | — |
 | `ScheduleCronExpression` | CRON expression for daily report | ❌ | `0 0 20 * * *` (8 PM) |
-| `WEBSITE_TIME_ZONE` | Timezone for the timer trigger | ❌ | `SA Pacific Standard Time` (Bogota) |
+| `WEBSITE_TIME_ZONE` | Timezone for timer trigger and email times | ❌ | `SA Pacific Standard Time` (Bogota) |
 
 ### CRON Expression Format
 
@@ -121,7 +121,11 @@ Examples:
 
 ### Timezone Configuration
 
-Set `WEBSITE_TIME_ZONE` to your local timezone. Common values:
+Set `WEBSITE_TIME_ZONE` to your local timezone. This setting is used for:
+- ⏰ **Timer trigger**: The daily report runs at the configured time in your timezone
+- 📧 **Email times**: All times in the email (report generation, deal times) are converted to your timezone
+
+Common values:
 
 | Timezone | Value |
 |----------|-------|
