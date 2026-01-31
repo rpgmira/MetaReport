@@ -1,5 +1,6 @@
 using Azure;
 using Azure.Communication.Email;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MetaReport.Models;
@@ -16,15 +17,22 @@ public class AzureEmailService : IEmailService
     private readonly EmailClient _emailClient;
     private readonly EmailOptions _options;
     private readonly ILogger<AzureEmailService> _logger;
+    private readonly TimeZoneInfo _timeZone;
 
     public AzureEmailService(
         EmailClient emailClient,
         IOptions<EmailOptions> options,
+        IConfiguration configuration,
         ILogger<AzureEmailService> logger)
     {
         _emailClient = emailClient;
         _options = options.Value;
         _logger = logger;
+        
+        // Read timezone from WEBSITE_TIME_ZONE configuration (defaults to UTC if not set)
+        var timeZoneId = configuration["WEBSITE_TIME_ZONE"] ?? "UTC";
+        _timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        _logger.LogDebug("Using timezone: {TimeZone}", _timeZone.DisplayName);
     }
 
     /// <inheritdoc />
@@ -89,22 +97,37 @@ public class AzureEmailService : IEmailService
         }
     }
 
-    // Colombia timezone (SA Pacific Standard Time = UTC-5)
-    private static readonly TimeZoneInfo ColombiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+    private DateTime ToLocalTime(DateTime utcTime) => TimeZoneInfo.ConvertTimeFromUtc(utcTime, _timeZone);
     
-    private static DateTime ToLocalTime(DateTime utcTime) => TimeZoneInfo.ConvertTimeFromUtc(utcTime, ColombiaTimeZone);
+    private string TimeZoneDisplayName => _timeZone.DisplayName;
     
-    private static string BuildPlainTextContent(TradingReport report)
+    // Get a short timezone name (e.g., "COT" for SA Pacific Standard Time)
+    private string GetTimeZoneAbbreviation()
+    {
+        // Map common timezone IDs to their abbreviations
+        return _timeZone.Id switch
+        {
+            "SA Pacific Standard Time" => "COT",  // Colombia Time
+            "Eastern Standard Time" => "EST",
+            "Pacific Standard Time" => "PST",
+            "Central Standard Time" => "CST",
+            "UTC" => "UTC",
+            _ => _timeZone.StandardName.Length <= 5 ? _timeZone.StandardName : _timeZone.Id
+        };
+    }
+    
+    private string BuildPlainTextContent(TradingReport report)
     {
         var sb = new StringBuilder();
         var localGeneratedAt = ToLocalTime(report.GeneratedAt);
         var localPeriodStart = ToLocalTime(report.PeriodStart);
         var localPeriodEnd = ToLocalTime(report.PeriodEnd);
+        var tzAbbreviation = GetTimeZoneAbbreviation();
         
         sb.AppendLine("=== MetaReport - Daily Trading Summary ===");
         sb.AppendLine();
-        sb.AppendLine($"Report Generated: {localGeneratedAt:yyyy-MM-dd HH:mm:ss} (Colombia)");
-        sb.AppendLine($"Period: {localPeriodStart:yyyy-MM-dd HH:mm} - {localPeriodEnd:yyyy-MM-dd HH:mm} (Colombia)");
+        sb.AppendLine($"Report Generated: {localGeneratedAt:yyyy-MM-dd HH:mm:ss} ({tzAbbreviation})");
+        sb.AppendLine($"Period: {localPeriodStart:yyyy-MM-dd HH:mm} - {localPeriodEnd:yyyy-MM-dd HH:mm} ({tzAbbreviation})");
         sb.AppendLine();
         sb.AppendLine("--- Account Summary ---");
         sb.AppendLine($"Account: {report.Account.Name} ({report.Account.Login})");
@@ -143,11 +166,12 @@ public class AzureEmailService : IEmailService
         return sb.ToString();
     }
 
-    private static string BuildHtmlContent(TradingReport report)
+    private string BuildHtmlContent(TradingReport report)
     {
         var profitColor = report.TotalProfit >= 0 ? "#28a745" : "#dc3545";
         var winRateColor = report.WinRate >= 50 ? "#28a745" : (report.WinRate >= 30 ? "#ffc107" : "#dc3545");
         var localGeneratedAt = ToLocalTime(report.GeneratedAt);
+        var tzAbbreviation = GetTimeZoneAbbreviation();
         
         var dealsHtml = new StringBuilder();
         if (report.TradingDeals.Any())
@@ -184,7 +208,7 @@ public class AzureEmailService : IEmailService
     
     <div style=""background: #f8f9fa; padding: 15px 20px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;"">
         <p style=""margin: 0; color: #6c757d; font-size: 14px;"">
-            📅 {localGeneratedAt:dddd, MMMM d, yyyy} at {localGeneratedAt:HH:mm} (Colombia)
+            📅 {localGeneratedAt:dddd, MMMM d, yyyy} at {localGeneratedAt:HH:mm} ({tzAbbreviation})
         </p>
     </div>
     
