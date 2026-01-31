@@ -1,0 +1,47 @@
+[
+  {
+    "name": "DailyReport",
+    "scriptFile": "MetaReport.dll",
+    "entryPoint": "MetaReport.Functions.DailyReportFunction.Run",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "timerInfo",
+        "direction": "In",
+        "type": "timerTrigger",
+        "schedule": "%ScheduleCronExpression%",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "ManualReport",
+    "scriptFile": "MetaReport.dll",
+    "entryPoint": "MetaReport.Functions.ManualReportFunction.Run",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Function",
+        "methods": [
+          "get"
+        ],
+        "route": "report",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  }
+]

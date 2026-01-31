@@ -31,16 +31,25 @@ public class SendGridEmailService : IEmailService
     /// <inheritdoc />
     public async Task<bool> SendReportAsync(TradingReport report, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Preparing email report for {ToAddress}", _options.ToAddress);
+        var recipients = _options.GetRecipients();
+        
+        if (recipients.Count == 0)
+        {
+            _logger.LogError("No recipients configured for email");
+            return false;
+        }
+        
+        _logger.LogInformation("Preparing email report for {RecipientCount} recipients: {Recipients}", 
+            recipients.Count, string.Join(", ", recipients));
 
         var from = new EmailAddress(_options.FromAddress, _options.FromName);
-        var to = new EmailAddress(_options.ToAddress, _options.ToName);
+        var tos = recipients.Select(email => new EmailAddress(email)).ToList();
         var subject = $"📊 MetaReport - Daily Trading Summary ({report.GeneratedAt:yyyy-MM-dd})";
         
         var plainTextContent = BuildPlainTextContent(report);
         var htmlContent = BuildHtmlContent(report);
 
-        var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+        var msg = MailHelper.CreateSingleEmailToMultipleRecipients(from, tos, subject, plainTextContent, htmlContent);
 
         try
         {
@@ -50,7 +59,7 @@ public class SendGridEmailService : IEmailService
                 response.StatusCode == HttpStatusCode.Accepted ||
                 response.StatusCode == HttpStatusCode.Created)
             {
-                _logger.LogInformation("Email sent successfully to {ToAddress}", _options.ToAddress);
+                _logger.LogInformation("Email sent successfully to {RecipientCount} recipients", recipients.Count);
                 return true;
             }
             else

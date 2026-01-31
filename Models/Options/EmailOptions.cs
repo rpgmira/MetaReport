@@ -27,7 +27,12 @@ public class EmailOptions
     public string FromName { get; set; } = "MetaReport";
 
     /// <summary>
-    /// Recipient email address for reports.
+    /// Recipient email addresses for reports (comma-separated).
+    /// </summary>
+    public string ToAddresses { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Legacy single recipient (for backward compatibility).
     /// </summary>
     public string ToAddress { get; set; } = string.Empty;
 
@@ -35,4 +40,26 @@ public class EmailOptions
     /// Recipient display name.
     /// </summary>
     public string ToName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets all recipient email addresses as a list.
+    /// </summary>
+    public List<string> GetRecipients()
+    {
+        var recipients = new List<string>();
+        
+        // Add addresses from ToAddresses (comma-separated)
+        if (!string.IsNullOrWhiteSpace(ToAddresses))
+        {
+            recipients.AddRange(ToAddresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+        
+        // Add legacy ToAddress if not already included
+        if (!string.IsNullOrWhiteSpace(ToAddress) && !recipients.Contains(ToAddress, StringComparer.OrdinalIgnoreCase))
+        {
+            recipients.Add(ToAddress);
+        }
+        
+        return recipients;
+    }
 }
