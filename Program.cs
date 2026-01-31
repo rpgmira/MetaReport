@@ -38,6 +38,9 @@ builder.Services.AddSingleton<EmailClient>(sp =>
     return new EmailClient(connectionString);
 });
 
+// Register report formatter (for email content generation)
+builder.Services.AddSingleton<IReportFormatter, ReportFormatter>();
+
 // Register email service (Azure Communication Services)
 builder.Services.AddSingleton<IEmailService, AzureEmailService>();
 

@@ -8,6 +8,18 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Allow test project to access internal members -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="MetaReport.Tests" />
+  </ItemGroup>
+
+  <!-- Exclude test project from compilation -->
+  <ItemGroup>
+    <Compile Remove="MetaReport.Tests\**" />
+    <Content Remove="MetaReport.Tests\**" />
+    <None Remove="MetaReport.Tests\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
