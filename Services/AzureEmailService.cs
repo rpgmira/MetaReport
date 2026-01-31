@@ -89,14 +89,22 @@ public class AzureEmailService : IEmailService
         }
     }
 
+    // Colombia timezone (SA Pacific Standard Time = UTC-5)
+    private static readonly TimeZoneInfo ColombiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+    
+    private static DateTime ToLocalTime(DateTime utcTime) => TimeZoneInfo.ConvertTimeFromUtc(utcTime, ColombiaTimeZone);
+    
     private static string BuildPlainTextContent(TradingReport report)
     {
         var sb = new StringBuilder();
+        var localGeneratedAt = ToLocalTime(report.GeneratedAt);
+        var localPeriodStart = ToLocalTime(report.PeriodStart);
+        var localPeriodEnd = ToLocalTime(report.PeriodEnd);
         
         sb.AppendLine("=== MetaReport - Daily Trading Summary ===");
         sb.AppendLine();
-        sb.AppendLine($"Report Generated: {report.GeneratedAt:yyyy-MM-dd HH:mm:ss} UTC");
-        sb.AppendLine($"Period: {report.PeriodStart:yyyy-MM-dd HH:mm} - {report.PeriodEnd:yyyy-MM-dd HH:mm} UTC");
+        sb.AppendLine($"Report Generated: {localGeneratedAt:yyyy-MM-dd HH:mm:ss} (Colombia)");
+        sb.AppendLine($"Period: {localPeriodStart:yyyy-MM-dd HH:mm} - {localPeriodEnd:yyyy-MM-dd HH:mm} (Colombia)");
         sb.AppendLine();
         sb.AppendLine("--- Account Summary ---");
         sb.AppendLine($"Account: {report.Account.Name} ({report.Account.Login})");
@@ -120,14 +128,11 @@ public class AzureEmailService : IEmailService
         
         if (report.TradingDeals.Any())
         {
-            sb.AppendLine("--- Recent Deals ---");
-            foreach (var deal in report.TradingDeals.Take(10))
+            sb.AppendLine($"--- All Deals ({report.TradeCount} total) ---");
+            foreach (var deal in report.TradingDeals.OrderByDescending(d => d.Time))
             {
-                sb.AppendLine($"  {deal.Time:HH:mm:ss} | {deal.Symbol} | {deal.Type} | {deal.Volume} lots | P/L: {deal.NetProfit:N2}");
-            }
-            if (report.TradingDeals.Count() > 10)
-            {
-                sb.AppendLine($"  ... and {report.TradingDeals.Count() - 10} more deals");
+                var localDealTime = ToLocalTime(deal.Time);
+                sb.AppendLine($"  {localDealTime:HH:mm:ss} | {deal.Symbol} | {deal.Type} | {deal.Volume} lots | P/L: {deal.NetProfit:N2}");
             }
         }
         
@@ -142,6 +147,7 @@ public class AzureEmailService : IEmailService
     {
         var profitColor = report.TotalProfit >= 0 ? "#28a745" : "#dc3545";
         var winRateColor = report.WinRate >= 50 ? "#28a745" : (report.WinRate >= 30 ? "#ffc107" : "#dc3545");
+        var localGeneratedAt = ToLocalTime(report.GeneratedAt);
         
         var dealsHtml = new StringBuilder();
         if (report.TradingDeals.Any())
@@ -149,15 +155,11 @@ public class AzureEmailService : IEmailService
             dealsHtml.AppendLine("<table style=\"width: 100%; border-collapse: collapse; margin-top: 10px;\">");
             dealsHtml.AppendLine("<tr style=\"background: #f8f9fa;\"><th style=\"padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;\">Time</th><th style=\"padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;\">Symbol</th><th style=\"padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;\">Type</th><th style=\"padding: 8px; text-align: right; border-bottom: 2px solid #dee2e6;\">Volume</th><th style=\"padding: 8px; text-align: right; border-bottom: 2px solid #dee2e6;\">P/L</th></tr>");
             
-            foreach (var deal in report.TradingDeals.Take(10))
+            foreach (var deal in report.TradingDeals.OrderByDescending(d => d.Time))
             {
+                var localDealTime = ToLocalTime(deal.Time);
                 var dealProfitColor = deal.NetProfit >= 0 ? "#28a745" : "#dc3545";
-                dealsHtml.AppendLine($"<tr><td style=\"padding: 8px; border-bottom: 1px solid #dee2e6;\">{deal.Time:HH:mm:ss}</td><td style=\"padding: 8px; border-bottom: 1px solid #dee2e6;\">{deal.Symbol}</td><td style=\"padding: 8px; border-bottom: 1px solid #dee2e6;\">{deal.Type}</td><td style=\"padding: 8px; text-align: right; border-bottom: 1px solid #dee2e6;\">{deal.Volume}</td><td style=\"padding: 8px; text-align: right; border-bottom: 1px solid #dee2e6; color: {dealProfitColor};\">{deal.NetProfit:N2}</td></tr>");
-            }
-            
-            if (report.TradingDeals.Count() > 10)
-            {
-                dealsHtml.AppendLine($"<tr><td colspan=\"5\" style=\"padding: 8px; text-align: center; color: #6c757d;\">... and {report.TradingDeals.Count() - 10} more deals</td></tr>");
+                dealsHtml.AppendLine($"<tr><td style=\"padding: 8px; border-bottom: 1px solid #dee2e6;\">{localDealTime:HH:mm:ss}</td><td style=\"padding: 8px; border-bottom: 1px solid #dee2e6;\">{deal.Symbol}</td><td style=\"padding: 8px; border-bottom: 1px solid #dee2e6;\">{deal.Type}</td><td style=\"padding: 8px; text-align: right; border-bottom: 1px solid #dee2e6;\">{deal.Volume}</td><td style=\"padding: 8px; text-align: right; border-bottom: 1px solid #dee2e6; color: {dealProfitColor};\">{deal.NetProfit:N2}</td></tr>");
             }
             
             dealsHtml.AppendLine("</table>");
@@ -182,7 +184,7 @@ public class AzureEmailService : IEmailService
     
     <div style=""background: #f8f9fa; padding: 15px 20px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;"">
         <p style=""margin: 0; color: #6c757d; font-size: 14px;"">
-            📅 {report.GeneratedAt:dddd, MMMM d, yyyy} at {report.GeneratedAt:HH:mm} UTC
+            📅 {localGeneratedAt:dddd, MMMM d, yyyy} at {localGeneratedAt:HH:mm} (Colombia)
         </p>
     </div>
     
@@ -237,7 +239,7 @@ public class AzureEmailService : IEmailService
     </div>
     
     <div style=""background: white; padding: 20px; border: 1px solid #dee2e6; border-top: none;"">
-        <h2 style=""color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 0;"">Recent Deals</h2>
+        <h2 style=""color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 0;"">Deals (Last 24 Hours)</h2>
         {dealsHtml}
     </div>
     
