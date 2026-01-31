@@ -1,7 +1,8 @@
 namespace MetaReport.Models.Options;
 
 /// <summary>
-/// Configuration options for email sending via SendGrid.
+/// Configuration options for email sending.
+/// Supports both Azure Communication Services and SendGrid (legacy).
 /// </summary>
 public class EmailOptions
 {
@@ -11,13 +12,18 @@ public class EmailOptions
     public const string SectionName = "Email";
 
     /// <summary>
-    /// SendGrid API key.
-    /// Obtain from SendGrid dashboard or Azure Marketplace.
+    /// Azure Communication Services connection string.
+    /// </summary>
+    public string AzureConnectionString { get; set; } = string.Empty;
+
+    /// <summary>
+    /// SendGrid API key (legacy - for backward compatibility).
     /// </summary>
     public string SendGridApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// Sender email address (must be verified in SendGrid).
+    /// Sender email address.
+    /// For Azure: use the Azure-managed domain address (DoNotReply@{domain}.azurecomm.net)
     /// </summary>
     public string FromAddress { get; set; } = string.Empty;
 

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Polly;
 using Polly.Extensions.Http;
-using SendGrid;
+using Azure.Communication.Email;
 using MetaReport.Models.Options;
 using MetaReport.Services;
 
@@ -29,17 +29,17 @@ builder.Services.Configure<EmailOptions>(
 builder.Services.AddHttpClient<IMetaApiService, MetaApiService>()
     .AddPolicyHandler(GetRetryPolicy());
 
-// Configure SendGrid client
-builder.Services.AddSingleton<ISendGridClient>(sp =>
+// Configure Azure Communication Services Email client
+builder.Services.AddSingleton<EmailClient>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var apiKey = configuration.GetSection(EmailOptions.SectionName)["SendGridApiKey"] 
-        ?? throw new InvalidOperationException("SendGrid API key not configured");
-    return new SendGridClient(apiKey);
+    var connectionString = configuration.GetSection(EmailOptions.SectionName)["AzureConnectionString"] 
+        ?? throw new InvalidOperationException("Azure Communication Services connection string not configured");
+    return new EmailClient(connectionString);
 });
 
-// Register email service
-builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
+// Register email service (Azure Communication Services)
+builder.Services.AddSingleton<IEmailService, AzureEmailService>();
 
 builder.Build().Run();
 
