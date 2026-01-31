@@ -8,11 +8,11 @@
     "MetaApi__AccountId": "<YOUR_METAAPI_ACCOUNT_ID>",
     "MetaApi__BaseUrl": "https://mt-client-api-v1.new-york.agiliumtrade.ai",
     
-    "Email__SendGridApiKey": "<YOUR_SENDGRID_API_KEY>",
-    "Email__FromAddress": "reports@yourdomain.com",
+    "Email__AzureConnectionString": "<YOUR_AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING>",
+    "Email__FromAddress": "DoNotReply@<YOUR_DOMAIN>.azurecomm.net",
     "Email__FromName": "MetaReport",
-    "Email__ToAddress": "you@youremail.com",
-    "Email__ToName": "Trader",
+    "Email__ToAddresses": "trader1@email.com,trader2@email.com",
+    "Email__ToName": "Recipients",
     
     "ScheduleCronExpression": "0 0 20 * * *",
     "WEBSITE_TIME_ZONE": "SA Pacific Standard Time"

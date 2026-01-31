@@ -12,10 +12,11 @@ MetaReport is an open-source Azure Functions application that fetches your tradi
 
 - 📈 **Account Summary**: Balance, equity, margin, and leverage at a glance
 - 📊 **24-Hour Trade History**: All trades from the last 24 hours with profit/loss
-- 📧 **Beautiful HTML Emails**: Clean, responsive email reports via SendGrid
+- 📧 **Beautiful HTML Emails**: Clean, responsive email reports via Azure Communication Services
+- 👥 **Multiple Recipients**: Send reports to multiple email addresses
 - ⏰ **Scheduled Reports**: Daily timer trigger (default: 8 PM your timezone)
 - 🔗 **On-Demand Reports**: HTTP endpoint for instant report generation
-- 💰 **Free Tier Friendly**: Designed to run within Azure and SendGrid free limits
+- 💰 **Cost Effective**: Designed to run within Azure free/low-cost tiers
 - 🔒 **Secure**: No secrets stored in code; all configuration via App Settings
 
 ## 📋 Prerequisites
@@ -27,7 +28,7 @@ Before you begin, you'll need:
    - Add your MT4/MT5 account to MetaAPI
    - Get your API token from [app.metaapi.cloud/token](https://app.metaapi.cloud/token)
    - Note your MetaAPI Account ID (not your MT4 login)
-3. **SendGrid Account** — Sign up via [Azure Marketplace](https://portal.azure.com/#create/SendGrid.SendGrid) (100 free emails/day)
+3. **Azure Communication Services** — Create via Azure Portal (Email service with Azure-managed domain)
 4. **.NET 8 SDK** — [Download](https://dotnet.microsoft.com/download/dotnet/8.0)
 5. **Azure Functions Core Tools** — [Install guide](https://docs.microsoft.com/azure/azure-functions/functions-run-local)
 
@@ -61,11 +62,11 @@ Edit `local.settings.json` with your credentials:
     "MetaApi__AccountId": "your-metaapi-account-id",
     "MetaApi__BaseUrl": "https://mt-client-api-v1.new-york.agiliumtrade.ai",
     
-    "Email__SendGridApiKey": "SG.your-sendgrid-api-key",
-    "Email__FromAddress": "reports@yourdomain.com",
+    "Email__AzureConnectionString": "endpoint=https://your-acs.communication.azure.com/;accesskey=...",
+    "Email__FromAddress": "DoNotReply@your-domain.azurecomm.net",
     "Email__FromName": "MetaReport",
-    "Email__ToAddress": "you@youremail.com",
-    "Email__ToName": "Trader",
+    "Email__ToAddresses": "trader1@email.com,trader2@email.com",
+    "Email__ToName": "Recipients",
     
     "ScheduleCronExpression": "0 0 20 * * *",
     "WEBSITE_TIME_ZONE": "SA Pacific Standard Time"
@@ -100,10 +101,10 @@ curl "http://localhost:7071/api/report"
 | `MetaApi__Token` | Your MetaAPI auth token | ✅ | — |
 | `MetaApi__AccountId` | MetaAPI provisioned account ID | ✅ | — |
 | `MetaApi__BaseUrl` | MetaAPI regional endpoint | ❌ | `https://mt-client-api-v1.new-york.agiliumtrade.ai` |
-| `Email__SendGridApiKey` | SendGrid API key | ✅ | — |
-| `Email__FromAddress` | Sender email (must be verified in SendGrid) | ✅ | — |
+| `Email__AzureConnectionString` | Azure Communication Services connection string | ✅ | — |
+| `Email__FromAddress` | Sender email (use Azure-managed domain address) | ✅ | — |
 | `Email__FromName` | Sender display name | ❌ | `MetaReport` |
-| `Email__ToAddress` | Recipient email | ✅ | — |
+| `Email__ToAddresses` | Recipient emails (comma-separated for multiple) | ✅ | — |
 | `Email__ToName` | Recipient display name | ❌ | — |
 | `ScheduleCronExpression` | CRON expression for daily report | ❌ | `0 0 20 * * *` (8 PM) |
 | `WEBSITE_TIME_ZONE` | Timezone for the timer trigger | ❌ | `SA Pacific Standard Time` (Bogota) |
@@ -166,9 +167,9 @@ Set `WEBSITE_TIME_ZONE` to your local timezone. Common values:
    - Edit `.github/workflows/deploy.yml`
    - Change `AZURE_FUNCTIONAPP_NAME` to your function app name
 
-4. **Push to Main**:
+4. **Push to Master**:
    ```bash
-   git push origin main
+   git push origin master
    ```
    The workflow will automatically build and deploy.
 
@@ -176,11 +177,11 @@ Set `WEBSITE_TIME_ZONE` to your local timezone. Common values:
 
 MetaReport is designed to run within free tier limits:
 
-| Service | Free Tier | MetaReport Usage |
+| Service | Free Tier / Cost | MetaReport Usage |
 |---------|-----------|------------------|
-| **Azure Functions** | 1M executions/month | ~60 executions/month (2/day) |
+| **Azure Functions** | 1M executions/month free | ~60 executions/month (2/day) |
 | **Azure Storage** | — | ~$0.10-0.50/month* |
-| **SendGrid** | 100 emails/day | 1-2 emails/day |
+| **Azure Communication Services** | First 1000 emails free, then ~$0.00025/email | 1-3 emails/day |
 | **GitHub Actions** | Unlimited (public repos) | ~2 min/deployment |
 
 \* Azure Storage is required for timer trigger state and is not included in free tier, but costs are minimal.
@@ -212,7 +213,8 @@ MetaReport/
 │   ├── IMetaApiService.cs         # MetaAPI interface
 │   ├── MetaApiService.cs          # MetaAPI implementation
 │   ├── IEmailService.cs           # Email interface
-│   └── SendGridEmailService.cs    # SendGrid implementation
+│   ├── AzureEmailService.cs       # Azure Communication Services implementation
+│   └── SendGridEmailService.cs    # SendGrid implementation (legacy)
 ├── Program.cs                     # DI and startup config
 ├── host.json                      # Azure Functions host config
 ├── local.settings.template.json   # Settings template (safe to commit)
@@ -256,7 +258,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [MetaAPI](https://metaapi.cloud/) for the trading account API
-- [SendGrid](https://sendgrid.com/) for email delivery
+- [Azure Communication Services](https://azure.microsoft.com/services/communication-services/) for email delivery
 - [Azure Functions](https://azure.microsoft.com/services/functions/) for serverless compute
 
 ---
