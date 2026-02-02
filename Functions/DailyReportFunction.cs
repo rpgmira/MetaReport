@@ -26,7 +26,7 @@ public class DailyReportFunction
 
     /// <summary>
     /// Timer trigger that runs according to the ScheduleCronExpression setting.
-    /// Default: "0 0 20 * * *" (8:00 PM daily).
+    /// Default: "0 0 20 * * 1-5" (8:00 PM Monday-Friday).
     /// Configure WEBSITE_TIME_ZONE to set the timezone (e.g., "SA Pacific Standard Time" for Bogota).
     /// </summary>
     [Function("DailyReport")]
