@@ -68,7 +68,7 @@ Edit `local.settings.json` with your credentials:
     "Email__ToAddresses": "trader1@email.com,trader2@email.com",
     "Email__ToName": "Recipients",
     
-    "ScheduleCronExpression": "0 0 20 * * *",
+    "ScheduleCronExpression": "0 0 20 * * 1-5",
     "WEBSITE_TIME_ZONE": "SA Pacific Standard Time"
   }
 }
@@ -106,7 +106,7 @@ curl "http://localhost:7071/api/report"
 | `Email__FromName` | Sender display name | ❌ | `MetaReport` |
 | `Email__ToAddresses` | Recipient emails (comma-separated for multiple) | ✅ | — |
 | `Email__ToName` | Recipient display name | ❌ | — |
-| `ScheduleCronExpression` | CRON expression for daily report | ❌ | `0 0 20 * * *` (8 PM) |
+| `ScheduleCronExpression` | CRON expression for daily report | ❌ | `0 0 20 * * 1-5` (8 PM weekdays) |
 | `WEBSITE_TIME_ZONE` | Timezone for timer trigger and email times | ❌ | `SA Pacific Standard Time` (Bogota) |
 
 ### CRON Expression Format
