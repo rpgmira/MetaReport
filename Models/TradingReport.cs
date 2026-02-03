@@ -56,7 +56,14 @@ public class TradingReport
     public int LosingTrades => TradingDeals.Count(d => d.NetProfit < 0);
 
     /// <summary>
-    /// Win rate percentage.
+    /// Win rate percentage (excluding break-even trades).
     /// </summary>
-    public decimal WinRate => TradeCount > 0 ? (decimal)WinningTrades / TradeCount * 100 : 0;
+    public decimal WinRate
+    {
+        get
+        {
+            var decisiveTradeCount = WinningTrades + LosingTrades;
+            return decisiveTradeCount > 0 ? (decimal)WinningTrades / decisiveTradeCount * 100 : 0;
+        }
+    }
 }
