@@ -14,7 +14,7 @@ MetaReport is an open-source Azure Functions application that fetches your tradi
 - 📊 **24-Hour Trade History**: All trades from the last 24 hours with profit/loss
 - 📧 **Beautiful HTML Emails**: Clean, responsive email reports via Azure Communication Services
 - 👥 **Multiple Recipients**: Send reports to multiple email addresses
-- ⏰ **Scheduled Reports**: Daily timer trigger (default: 8 PM your timezone)
+- ⏰ **Scheduled Reports**: Daily timer trigger (default: 6 PM your timezone)
 - 🔗 **On-Demand Reports**: HTTP endpoint for instant report generation
 - 💰 **Cost Effective**: Designed to run within Azure free/low-cost tiers
 - 🔒 **Secure**: No secrets stored in code; all configuration via App Settings
@@ -68,7 +68,7 @@ Edit `local.settings.json` with your credentials:
     "Email__ToAddresses": "trader1@email.com,trader2@email.com",
     "Email__ToName": "Recipients",
     
-    "ScheduleCronExpression": "0 0 20 * * 1-5",
+    "ScheduleCronExpression": "0 0 18 * * 1-5",
     "WEBSITE_TIME_ZONE": "SA Pacific Standard Time"
   }
 }
@@ -106,7 +106,7 @@ curl "http://localhost:7071/api/report"
 | `Email__FromName` | Sender display name | ❌ | `MetaReport` |
 | `Email__ToAddresses` | Recipient emails (comma-separated for multiple) | ✅ | — |
 | `Email__ToName` | Recipient display name | ❌ | — |
-| `ScheduleCronExpression` | CRON expression for daily report | ❌ | `0 0 20 * * 1-5` (8 PM weekdays) |
+| `ScheduleCronExpression` | CRON expression for daily report | ❌ | `0 0 18 * * 1-5` (6 PM weekdays) |
 | `WEBSITE_TIME_ZONE` | Timezone for timer trigger and email times | ❌ | `SA Pacific Standard Time` (Bogota) |
 
 ### CRON Expression Format
@@ -114,10 +114,10 @@ curl "http://localhost:7071/api/report"
 The format is: `{second} {minute} {hour} {day} {month} {day-of-week}`
 
 Examples:
-- `0 0 20 * * *` — 8:00 PM daily
+- `0 0 18 * * *` — 6:00 PM daily
 - `0 30 8 * * *` — 8:30 AM daily
 - `0 0 9,21 * * *` — 9 AM and 9 PM daily
-- `0 0 20 * * 1-5` — 8 PM on weekdays only
+- `0 0 18 * * 1-5` — 6 PM on weekdays only
 
 ### Timezone Configuration
 
@@ -204,7 +204,7 @@ Azure Functions uses a Storage Account for:
 MetaReport/
 ├── .github/workflows/deploy.yml   # GitHub Actions CI/CD
 ├── Functions/
-│   ├── DailyReportFunction.cs     # Timer trigger (8 PM daily)
+│   ├── DailyReportFunction.cs     # Timer trigger (6 PM daily)
 │   └── ManualReportFunction.cs    # HTTP GET /api/report
 ├── Models/
 │   ├── AccountInfo.cs             # MetaAPI account response

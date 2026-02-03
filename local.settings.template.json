@@ -14,7 +14,7 @@
     "Email__ToAddresses": "trader1@email.com,trader2@email.com",
     "Email__ToName": "Recipients",
     
-    "ScheduleCronExpression": "0 0 20 * * 1-5",
+    "ScheduleCronExpression": "0 0 18 * * 1-5",
     "WEBSITE_TIME_ZONE": "SA Pacific Standard Time"
   }
 }
