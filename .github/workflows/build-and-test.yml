@@ -11,6 +11,7 @@ on:
 
 env:
   DOTNET_VERSION: '8.0.x'
+  COVERAGE_THRESHOLD: 35
 
 jobs:
   build-and-test:
@@ -42,11 +43,11 @@ jobs:
           [xml]$coverage = Get-Content $coverageFile.FullName
           $lineRate = [double]$coverage.coverage.'line-rate' * 100
           Write-Host "Code coverage: $([math]::Round($lineRate, 2))%"
-          if ($lineRate -lt 35) {
-            Write-Error "Code coverage ($([math]::Round($lineRate, 2))%) is below threshold (35%)"
+          if ($lineRate -lt ${{ env.COVERAGE_THRESHOLD }}) {
+            Write-Error "Code coverage ($([math]::Round($lineRate, 2))%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
             exit 1
           }
-          Write-Host "✅ Code coverage meets threshold (>= 35%)"
+          Write-Host "✅ Code coverage meets threshold (>= ${{ env.COVERAGE_THRESHOLD }}%)"
         } else {
           Write-Error "No coverage file found - coverage collection may have failed"
           exit 1
