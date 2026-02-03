@@ -18,12 +18,12 @@ jobs:
     
     steps:
     - name: Download build artifact
-      uses: actions/download-artifact@v4
+      uses: dawidd6/action-download-artifact@v3
       with:
         name: function-app
         path: ./publish
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        run-id: ${{ github.event.workflow_run.id }}
+        workflow: build-and-test.yml
+        run_id: ${{ github.event.workflow_run.id }}
 
     - name: Deploy to Azure Functions
       uses: Azure/functions-action@v1
