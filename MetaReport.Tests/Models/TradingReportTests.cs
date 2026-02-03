@@ -205,4 +205,55 @@ public class TradingReportTests
         // Assert
         winRate.Should().Be(0);
     }
+
+    [Fact]
+    public void WinRate_ShouldExcludeBreakEvenTrades()
+    {
+        // Arrange - Scenario from GitHub issue: 2 wins, 2 losses, 4 break-even = 8 total trades
+        var report = new TradingReport
+        {
+            Account = CreateTestAccount(),
+            RecentDeals = new List<Deal>
+            {
+                CreateDeal("DEAL_TYPE_BUY", 50),      // Win
+                CreateDeal("DEAL_TYPE_SELL", 30),     // Win
+                CreateDeal("DEAL_TYPE_BUY", -20),     // Loss
+                CreateDeal("DEAL_TYPE_SELL", -10),    // Loss
+                CreateDeal("DEAL_TYPE_BUY", 0),       // Break-even
+                CreateDeal("DEAL_TYPE_SELL", 0),      // Break-even
+                CreateDeal("DEAL_TYPE_BUY", 0),       // Break-even
+                CreateDeal("DEAL_TYPE_SELL", 0)       // Break-even
+            }
+        };
+
+        // Act
+        var winRate = report.WinRate;
+
+        // Assert
+        // Win Rate should be 50% (2 wins out of 2 wins + 2 losses = 4 decisive trades)
+        // NOT 25% (2 wins out of 8 total trades including break-even)
+        winRate.Should().Be(50m);
+    }
+
+    [Fact]
+    public void WinRate_WithOnlyBreakEvenTrades_ShouldReturnZero()
+    {
+        // Arrange
+        var report = new TradingReport
+        {
+            Account = CreateTestAccount(),
+            RecentDeals = new List<Deal>
+            {
+                CreateDeal("DEAL_TYPE_BUY", 0),
+                CreateDeal("DEAL_TYPE_SELL", 0),
+                CreateDeal("DEAL_TYPE_BUY", 0)
+            }
+        };
+
+        // Act
+        var winRate = report.WinRate;
+
+        // Assert
+        winRate.Should().Be(0);
+    }
 }
