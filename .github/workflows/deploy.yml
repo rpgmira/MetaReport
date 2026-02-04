@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build, Test and Deploy
 
 on:
   push:
@@ -7,17 +7,16 @@ on:
   pull_request:
     branches:
       - master
-  workflow_dispatch:
+  workflow_dispatch:  # Allow manual trigger
 
 env:
+  AZURE_FUNCTIONAPP_NAME: 'func-metareport'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   DOTNET_VERSION: '8.0.x'
-  COVERAGE_THRESHOLD: 35
 
 jobs:
   build-and-test:
     runs-on: windows-latest
-    permissions:
-      contents: read
     
     steps:
     - name: Checkout repository
@@ -45,11 +44,11 @@ jobs:
           [xml]$coverage = Get-Content $coverageFile.FullName
           $lineRate = [double]$coverage.coverage.'line-rate' * 100
           Write-Host "Code coverage: $([math]::Round($lineRate, 2))%"
-          if ($lineRate -lt ${{ env.COVERAGE_THRESHOLD }}) {
-            Write-Error "Code coverage ($([math]::Round($lineRate, 2))%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+          if ($lineRate -lt 35) {
+            Write-Error "Code coverage ($([math]::Round($lineRate, 2))%) is below threshold (35%)"
             exit 1
           }
-          Write-Host "✅ Code coverage meets threshold (>= ${{ env.COVERAGE_THRESHOLD }}%)"
+          Write-Host "✅ Code coverage meets threshold (>= 35%)"
         } else {
           Write-Error "No coverage file found - coverage collection may have failed"
           exit 1
@@ -59,9 +58,10 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: dotnet publish MetaReport.csproj --configuration Release --output ./publish
 
-    - name: Upload build artifact
+    - name: Deploy to Azure Functions
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: actions/upload-artifact@v4
+      uses: Azure/functions-action@v1
       with:
-        name: function-app
-        path: ./publish
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: './publish'
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
